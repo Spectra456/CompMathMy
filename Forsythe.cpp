@@ -2,7 +2,7 @@
 #include <math.h>
 #include <cstdlib>
 #include <cstdio>
-#include <conio.h>
+//#include <conio.h>
 
 inline void fehl(void (*f)(Float t, Float *Y, Float *dY), unsigned int neqn, Float *Y, Float t, Float h, Float *dY,
 			Float *F1, Float *F2, Float *F3, Float *F4, Float *F5, Float *S)

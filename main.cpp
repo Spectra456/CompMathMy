@@ -21,6 +21,8 @@ int main() {
     double beta[3] = {0.1, 0.01, 0.001};
     double A1[4][4];
 
+
+
 // Вычисления для betta1
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -42,16 +44,10 @@ int main() {
             k++;
         }
     }
-    for (int i = 0; i < size * size; i++) {
-        if (i % 4 == 0) {
 
-            std::cout << "\n";
-        }
-        std::cout << newA[i] << " |";
-    }
 
     Decomp(size, newA, &cond, ipvt);
-
+    std::cout << "После DECOMP";
     std::cout << "\n";
     for (int i = 0; i < size * size; i++) {
         if (i % 4 == 0) {
@@ -60,6 +56,8 @@ int main() {
         }
         std::cout << newA[i] << " |";
     }
+
+    std::cout << "После SOLVE";
     std::cout << "\n";
 
     double B[size];
@@ -72,6 +70,9 @@ int main() {
         Solve(size, newA, B, ipvt);
 
     }
+
+    std::cout << "\n";
+    std::cout << "После A^-1";
  // ВЫВОД РЕЗУЛЬТАТА A^-1
     for (int i = 0; i < size * size; i++) {
         if (i % 4 == 0) {
@@ -82,6 +83,8 @@ int main() {
     }
     std::cout << "\n";
     // ВЫВОД R
+    std::cout << "\n";
+    std::cout << "Вычисление R";
     double R[4][4];
     int t;
     for (int i=0; i<4 ;i++) {
@@ -92,6 +95,10 @@ int main() {
             std::cout << "|" << R[i][j];
         }
     }
+
+
+    std::cout << "\n";
+    std::cout << "Норма матрицы R";
 
     double norm=0;
     double tmp=0;
@@ -107,15 +114,6 @@ int main() {
     std::cout << "\n";
     std::cout << norm;
 
-
-//    std::cout<<"\n";
-//
-//        for (int i=0; i<4 ;i++){
-//    std::cout << "\n";
-//    for (int j=0; j<4; j++){
-//        std::cout<<"|"<<A1[i][j];
-//    }
-//  }
 
 
 
