@@ -40,7 +40,7 @@ int main() {
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
 
-            newA[k] = A1[i][j];
+            newA[k] = A1[j][i];
             k++;
         }
     }
@@ -54,7 +54,11 @@ int main() {
 
             std::cout << "\n";
         }
-        std::cout << newA[i] << " |";
+        if (newA[i]>=1) {
+            std::cout << newA[i] << " |";
+        } else {
+            std::cout << 0 << " |";
+        }
     }
 
     std::cout << "После SOLVE";
