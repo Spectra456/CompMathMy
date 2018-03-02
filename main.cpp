@@ -1,124 +1,62 @@
 #include <iostream>
-#include <cmath>
 #include "Forsythe.h"
+#include <conio.h>
+#include <math.h>
+#include <iomanip>
+#include <fstream>
 
+void f(double x, double y[], double dydx[]) {
+
+    dydx[0] = -45*y[0] - 60*y[1] + sin(x+1);
+    dydx[1] = 70*y[0] -110*y[1] + cos(1-x) + x + 1;
+}
+
+void rk2(void(*f)(double x, double y[], double dydx[]),
+         double t, double tout, double Zn[],  double h);
 
 int main() {
 
-    double alpha = 2;
+    const int x1 = 5;
+    const int x2 = -1;
 
-    double H[4][4] = {{alpha,         1,             0,             0},
-                      {pow(alpha, 2), alpha,         1,             0},
-                      {pow(alpha, 3), pow(alpha, 2), alpha,         1},
-                      {pow(alpha, 4), pow(alpha, 3), pow(alpha, 2), alpha}};
+    double x[2] = {x1, x2};
 
-    double E[4][4] = {{1, 0, 0, 0},
-                      {0, 1, 0, 0},
-                      {0, 0, 1, 0},
-                      {0, 0, 0, 1}};
+    int left_border = 0;
+    int right_border = 1;
 
 
-    double beta[3] = {0.1, 0.01, 0.001};
-    double A1[4][4];
+    //rkf45
+    const int neqn = 2;
+    unsigned char work[6*(neqn*sizeof(Float)) + sizeof(struct rkf_inside)];
 
+    rkf ARG;
+    ARG.f = f;
+    ARG.neqn = neqn;
+    ARG.re = 0.0001;
+    ARG.ae = 0.0001;
+    ARG.work = work;
+    ARG.flag = 1;
+    ARG.Y = x;
+    ARG.t = 0;
 
+    double step=0.05;
 
-// Вычисления для betta1
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            A1[i][j] = E[i][j] * beta[0] + H[i][j];
-        }
+    std::ofstream out("out.txt");
+
+    out <<"RKF45\n\n";
+    out <<"   t |     x[0]  |     x[1]  |  Flag\n";
+    out <<"_______________________________________\n";
+    out.setf(std::ios::fixed);
+
+    for(double h=(left_border + step); h<(right_border + step); h+=0.05) {
+
+        ARG.tout = h;
+        rkf45(&ARG);
+        out << std::setw(5)  << std::setprecision(2) << ARG.t
+            << std::setw(11) << std::setprecision(6) << x[0]
+            << std::setw(11) << std::setprecision(6) << x[1]
+            << std::setw(4)  << std::setprecision(0) << ARG.flag
+            << std::endl;
     }
-
-// DECOMP и SOLVE
-    const int size = 4;
-    double cond;
-    double newA[size * size];
-    int ipvt[size];
-    int k = 0;
-    std::cout.precision(2);
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-
-            newA[k] = A1[j][i];
-            k++;
-        }
-    }
-
-
-    Decomp(size, newA, &cond, ipvt);
-    std::cout << "После DECOMP";
-    std::cout << "\n";
-    for (int i = 0; i < size * size; i++) {
-        if (i % 4 == 0) {
-
-            std::cout << "\n";
-        }
-        if (newA[i]>=1) {
-            std::cout << newA[i] << " |";
-        } else {
-            std::cout << 0 << " |";
-        }
-    }
-
-    std::cout << "После SOLVE";
-    std::cout << "\n";
-
-    double B[size];
-
-    for (int i = 0; i < size; i++) {
-        for (int k = 0; k < size; k++) {
-            B[k] = 0;
-        }
-        B[i] = 1;
-        Solve(size, newA, B, ipvt);
-
-    }
-
-    std::cout << "\n";
-    std::cout << "После A^-1";
- // ВЫВОД РЕЗУЛЬТАТА A^-1
-    for (int i = 0; i < size * size; i++) {
-        if (i % 4 == 0) {
-
-            std::cout << "\n";
-        }
-        std::cout << B[i] << " |";
-    }
-    std::cout << "\n";
-    // ВЫВОД R
-    std::cout << "\n";
-    std::cout << "Вычисление R";
-    double R[4][4];
-    int t;
-    for (int i=0; i<4 ;i++) {
-        std::cout << "\n";
-        for (int j = 0; j < 4; j++) {
-            t++;
-            R[i][j]=B[t]*A1[i][j]-E[i][j];
-            std::cout << "|" << R[i][j];
-        }
-    }
-
-
-    std::cout << "\n";
-    std::cout << "Норма матрицы R";
-
-    double norm=0;
-    double tmp=0;
-
-    for(int i = 0; i<size; i++){
-        tmp=0;
-        for(int j = 0; j<size; j++){
-            tmp=tmp+abs(R[j][i]);
-        }
-        if(tmp>norm) {norm=tmp;}
-    }
-
-    std::cout << "\n";
-    std::cout << norm;
-
-
-
-
+    out <<"_______________________________________\n\n";
 }
