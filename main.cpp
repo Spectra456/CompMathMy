@@ -1,62 +1,90 @@
-#include <iostream>
-#include "Forsythe.h"
-#include <conio.h>
-#include <math.h>
-#include <iomanip>
-#include <fstream>
+#include "stdio.h"
+#include "math.h"
+#include "rkf45.h"
 
-void f(double x, double y[], double dydx[]) {
-
-    dydx[0] = -45*y[0] - 60*y[1] + sin(x+1);
-    dydx[1] = 70*y[0] -110*y[1] + cos(1-x) + x + 1;
+void f(float t, float *x, float *dx) {
+    dx[0] = -45 * x[0] + 60 * x[1] + sin(1+t);
+    dx[1] = 70 * x[0] - 110 * x[1] +cos(1-t) + t + 1;
+    return;
 }
-
-void rk2(void(*f)(double x, double y[], double dydx[]),
-         double t, double tout, double Zn[],  double h);
-
 int main() {
-
-    const int x1 = 5;
-    const int x2 = -1;
-
-    double x[2] = {x1, x2};
-
-    int left_border = 0;
-    int right_border = 1;
-
-
-    //rkf45
-    const int neqn = 2;
-    unsigned char work[6*(neqn*sizeof(Float)) + sizeof(struct rkf_inside)];
-
-    rkf ARG;
-    ARG.f = f;
-    ARG.neqn = neqn;
-    ARG.re = 0.0001;
-    ARG.ae = 0.0001;
-    ARG.work = work;
-    ARG.flag = 1;
-    ARG.Y = x;
-    ARG.t = 0;
-
-    double step=0.05;
-
-    std::ofstream out("out.txt");
-
-    out <<"RKF45\n\n";
-    out <<"   t |     x[0]  |     x[1]  |  Flag\n";
-    out <<"_______________________________________\n";
-    out.setf(std::ios::fixed);
-
-    for(double h=(left_border + step); h<(right_border + step); h+=0.05) {
-
-        ARG.tout = h;
-        rkf45(&ARG);
-        out << std::setw(5)  << std::setprecision(2) << ARG.t
-            << std::setw(11) << std::setprecision(6) << x[0]
-            << std::setw(11) << std::setprecision(6) << x[1]
-            << std::setw(4)  << std::setprecision(0) << ARG.flag
-            << std::endl;
+    int n = 2;
+    float x0[2] = { 5, -1 };
+    float t = 0, tout = 0;
+    float re = 0.0001, ae = 0.0001;
+    int iflag = 1;
+    float work[15];
+    int iwork[30];
+    float h = 0.05;
+    while (tout < 1.01) {
+        RKF45(f, n, x0, &t, &tout, &re, &ae, &iflag, work, iwork);
+        printf("t = %.2f, x = { %f; %f }, iflag = %d\n", t, x0[0], x0[1], iflag);
+        tout += h;
     }
-    out <<"_______________________________________\n\n";
+
+    float zn[2], k1[2], k2[2], k3[2], k4[2], ktmp[2];
+    printf("\nRK 4 degree of accuracy, h = 0.025\n");
+    x0[0] = 0; x0[1] = 1;
+    t = 0;
+    h = 0.025;
+    for (int i;t < 1.01;i++) {
+        f(t, x0, k1);
+        k1[0] *= h;
+        k1[1] *= h;
+        ktmp[0] = x0[0] + k1[0]/3;
+        ktmp[1] = x0[1] + k1[1]/3;
+        f(t + h/3, ktmp, k2);
+        k2[0] *= h;
+        k2[1] *= h;
+        ktmp[0] = x0[0] - k1[0]/3 + k2[0];
+        ktmp[1] = x0[1] - k1[1]/3 + k2[1];
+        f(t + 2*h/3, ktmp, k3);
+        k3[0] *= h;
+        k3[1] *= h;
+        ktmp[0] = x0[0] + k1[0] - k2[0] + k3[0];
+        ktmp[1] = x0[1] + k1[1] - k2[1] + k3[1];
+        f(t+h, ktmp, k4);
+        k4[0] *= h;
+        k4[1] *= h;
+        zn[0] = x0[0] + (k1[0] + 3*k2[0] + 3*k3[0] + k4[0])/8;
+        zn[1] = x0[1] + (k1[1] + 3*k2[1] + 3*k3[1] + k4[1])/8;
+        x0[0] = zn[0];
+        x0[1] = zn[1];
+        if (!(i%2)) {
+            printf("t = %.2f, x = { %f; %f }\n", t, zn[0], zn[1]);
+        }
+        t += h;
+    }
+    printf("\nRK 4 degree of accuracy, h = 0.001\n");
+    x0[0] = 0; x0[1] = 1;
+    t = 0;
+    h = 0.001;
+    for (int i; t < 1.005; i++) {
+        f(t, x0, k1);
+        k1[0] *= h;
+        k1[1] *= h;
+        ktmp[0] = x0[0] + k1[0]/3;
+        ktmp[1] = x0[1] + k1[1]/3;
+        f(t + h/3, ktmp, k2);
+        k2[0] *= h;
+        k2[1] *= h;
+        ktmp[0] = x0[0] - k1[0]/3 + k2[0];
+        ktmp[1] = x0[1] - k1[1]/3 + k2[1];
+        f(t + 2*h/3, ktmp, k3);
+        k3[0] *= h;
+        k3[1] *= h;
+        ktmp[0] = x0[0] + k1[0] - k2[0] + k3[0];
+        ktmp[1] = x0[1] + k1[1] - k2[1] + k3[1];
+        f(t+h, ktmp, k4);
+        k4[0] *= h;
+        k4[1] *= h;
+        zn[0] = x0[0] + (k1[0] + 3*k2[0] + 3*k3[0] + k4[0])/8;
+        zn[1] = x0[1] + (k1[1] + 3*k2[1] + 3*k3[1] + k4[1])/8;
+        x0[0] = zn[0];
+        x0[1] = zn[1];
+        if (!(i%20)) {
+            printf("t = %.2f, x = { %f; %f }\n", t, zn[0], zn[1]);
+        }
+        t += h;
+    }
 }

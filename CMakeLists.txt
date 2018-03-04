@@ -3,4 +3,4 @@ project(LOLKEK2)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(LOLKEK2 main.cpp Forsythe.cpp Forsythe.h)
+add_executable(LOLKEK2 main.cpp Forsythe.cpp Forsythe.h  rkf45.h)
